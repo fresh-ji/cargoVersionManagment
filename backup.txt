@@ -1,0 +1,20 @@
+    public Ref getRef(int index) {
+        return refs.get(index);
+    }
+
+    public void addRef(Ref ref) {
+        refs.push(ref);
+    }
+
+    void transFromRefs() throws Throwable {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(refs);
+        refBytes = baos.toByteArray();
+    }
+
+    void transToRefs() throws Throwable {
+        ByteArrayInputStream bais = new ByteArrayInputStream(refBytes);
+        ObjectInputStream ois = new ObjectInputStream(bais);
+        refs = (LinkedList<Ref>)ois.readObject();
+    }
