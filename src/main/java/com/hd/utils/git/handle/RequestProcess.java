@@ -18,28 +18,6 @@ import java.util.List;
 
 public class RequestProcess {
 
-
-
-    //目前不支持删除操作
-    //public Integer deleteProject(Long projectId) throws Throwable {
-    //    Project pj = new Project();
-    //    TreeNode node = findNode(projectHash);
-    //    pj.deleteCargo(node.repoPath);
-    //    node.childList.clear();
-    //    root.childList.remove(node);
-    //    return 1;
-    //}
-
-    //public Integer deleteTask(Long taskId) throws Throwable {
-    //    Task ta = new Task();
-    //    TreeNode node = findNode(taskHash);
-    //    ta.deleteCargo(node.repoPath);//删除master端
-    //    ta.deleteCargo(node.parent.repoPath
-    //            + "/" + node.name);
-    //    node.parent.childList.remove(node);
-    //    return 1;
-    //}
-
     //目前不支持项目的fork
     //public ServerResponse<ForkInfo> forkProject(String userIden, int projectId) throws Throwable {
     //   Project pj = new Project();

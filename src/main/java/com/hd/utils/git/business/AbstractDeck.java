@@ -15,17 +15,21 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 abstract class AbstractDeck {
 
-    public final String projectPath = "F:/mySpace/project/";
-    public final String taskPath = "F:/mySpace/task/";
+    //public final String projectPath = "F:/mySpace/project/";
+    //public final String taskPath = "F:/mySpace/task/";
+
+    public final String projectPath = "/Users/jihang/Desktop/mySpace/project/";
+    public final String taskPath = "/Users/jihang/Desktop/mySpace/task/";
 
     /**
+     public final String projectPath = "
      * 建立名字为name的Git库，路径为cargoPath
      * @param id 库id
      * @param cargoPath 文件系统路径，不包括name，对于task来说是root
      * @return 返回码中包含刚创建时的ref
      * @throws Throwable 扔
      */
-    abstract ServerResponse<Ref> addCargo(Long id, String cargoPath) throws Throwable;
+    abstract ServerResponse<String> addCargo(Long id, String cargoPath) throws Throwable;
 
     /**
      * 删除库，仅允许删除空项目和任务

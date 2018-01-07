@@ -16,17 +16,14 @@ public class GeneralNode {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     /**节点id*/
-    @Column(name = "project_id")
-    private Long projectId;
+    @Column(name = "node_id")
+    private Long nodeId;
     /**节点名*/
     @Column(name = "name")
     private String name;
     /**节点类型*/
     @Column(name = "type")
     private Integer type;
-    /**节点版本*/
-    @Column(name = "edition")
-    private Integer edition;
     /**节点对应的库目录路径，为带名字的全路径*/
     @Column(name = "repo_path")
     private String repoPath;
@@ -45,12 +42,12 @@ public class GeneralNode {
         this.id = id;
     }
 
-    public Long getProjectId() {
-        return projectId;
+    public Long getNodeId() {
+        return nodeId;
     }
 
-    public void setProjectId(Long projectId) {
-        this.projectId = projectId;
+    public void setNodeId(Long nodeId) {
+        this.nodeId = nodeId;
     }
 
     public String getName() {
@@ -67,14 +64,6 @@ public class GeneralNode {
 
     public void setType(Integer type) {
         this.type = type;
-    }
-
-    public Integer getEdition() {
-        return edition;
-    }
-
-    public void setEdition(Integer edition) {
-        this.edition = edition;
     }
 
     public String getRepoPath() {

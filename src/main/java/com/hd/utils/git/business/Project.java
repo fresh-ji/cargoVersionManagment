@@ -2,7 +2,7 @@ package com.hd.utils.git.business;
 
 import com.hd.utils.git.common.ServerResponse;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.File;
 
@@ -15,7 +15,7 @@ import java.io.File;
 public class Project extends AbstractDeck {
 
     @Override
-    public ServerResponse<Ref> addCargo(Long id, String cargoPath) throws Throwable {
+    public ServerResponse<String> addCargo(Long id, String cargoPath) throws Throwable {
         //建文件夹
         String name = Long.toString(id);
         String masterPath = cargoPath + name;
@@ -28,13 +28,13 @@ public class Project extends AbstractDeck {
         //提交第一个commit
         git.commit().setCommitter("master", "email")
                 .setMessage("Hi, this is " + name + "!").call();
-        Ref ref = git.getRepository().exactRef("refs/heads/master");
-        return ServerResponse.createBySuccess(ref);
+        Iterable<RevCommit> gitLog = git.log().setMaxCount(1).call();
+        return ServerResponse.createBySuccess(gitLog.iterator().next().getName());
     }
 
     @Override
     public ServerResponse deleteCargo(Long id) throws Throwable {
-        return ServerResponse.createBySuccess();
+        return ServerResponse.createByErrorMessage("function developing.....");
     }
 
 }
