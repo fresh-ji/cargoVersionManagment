@@ -1,11 +1,19 @@
 package com.hd.utils.git.business;
 
 import com.hd.utils.git.common.ServerResponse;
+import com.hd.utils.git.responsetype.ForkResult;
+import com.hd.utils.git.responsetype.PushResult;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.*;
-import org.eclipse.jgit.treewalk.AbstractTreeIterator;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * 业务基类
@@ -15,21 +23,22 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 abstract class AbstractDeck {
 
-    //public final String projectPath = "F:/mySpace/project/";
-    //public final String taskPath = "F:/mySpace/task/";
+    public static final String PROJECT_PATH = "F:\\mySpace\\project\\";
+    public static final String TASK_PATH = "F:\\mySpace\\task\\";
 
-    public final String projectPath = "/Users/jihang/Desktop/mySpace/project/";
-    public final String taskPath = "/Users/jihang/Desktop/mySpace/task/";
+    //public static final String PROJECT_PATH = "/Users/jihang/Desktop/mySpace/project/";
+    //public static final String TASK_PATH = "/Users/jihang/Desktop/mySpace/task/";
 
     /**
-     public final String projectPath = "
      * 建立名字为name的Git库，路径为cargoPath
      * @param id 库id
      * @param cargoPath 文件系统路径，不包括name，对于task来说是root
      * @return 返回码中包含刚创建时的ref
      * @throws Throwable 扔
      */
-    abstract ServerResponse<String> addCargo(Long id, String cargoPath) throws Throwable;
+    public static ServerResponse<String> addCargo(Long id, String cargoPath) throws Throwable {
+        return ServerResponse.createByErrorMessage("This is base class method!!!");
+    }
 
     /**
      * 删除库，仅允许删除空项目和任务
@@ -37,18 +46,20 @@ abstract class AbstractDeck {
      * @return 返回码
      * @throws Throwable 扔
      */
-    abstract ServerResponse deleteCargo(Long id) throws Throwable;
+    public static ServerResponse deleteCargo(Long id) throws Throwable {
+        return ServerResponse.createByErrorMessage("This is base class method!!!");
+    }
 
     /**
-     * @param userIdentify 用户名
+     * @param user 用户名
      * @param cargoPath 库路径，与add不同，这是全路径
      * @return clone路径及分支名
      */
-    /*
-    public ServerResponse<ForkInfo> forkCargo(String userIdentify, String cargoPath) throws Throwable {
+    public static ServerResponse<ForkResult> forkCargo(String user, String cargoPath) throws Throwable {
         Git git = Git.open(new File(cargoPath));
-        String branch = userIdentify + "@" + cargoPath;
+        String branch = user + "@" + cargoPath;
         branch = branch.replace(":", "");
+        branch = branch.replace("\\", "");
         if(git.getRepository().findRef(branch) != null) {
             return ServerResponse.createByErrorMessage("branch already exists!");
         }
@@ -56,62 +67,64 @@ abstract class AbstractDeck {
         git.branchCreate().setName(branch).call();
 
         git.checkout().setName(branch).call();
-        git.commit().setCommitter(userIdentify, "email")
-                .setMessage("Hi, this is " + branch + "!").call();
+        git.commit().setCommitter(user, "email")
+                .setMessage("Hi, this is branch " + branch + "!").call();
 
-        ForkInfo fi = new ForkInfo();
+        Iterable<RevCommit> gitLog = git.log().setMaxCount(1).call();
+
+        ForkResult fi = new ForkResult();
+        InetAddress address = InetAddress.getLocalHost();
+        fi.serverIp = address.getHostAddress();
         fi.repoUri = git.getRepository().getDirectory().getCanonicalPath();
-        //System.out.println(fi.repoUri);
         fi.branchName = "refs/heads/" +  git.getRepository().getBranch();
-        fi.ref = git.getRepository().exactRef(fi.branchName);
+        Integer tempId = git.getRepository().getBranch().hashCode();
+        fi.branchId = Integer.toUnsignedLong(tempId);
+        fi.versionName = gitLog.iterator().next().getName();
         return ServerResponse.createBySuccess(fi);
     }
-    */
+
     /**
-     * 按分支返回管道，每个分支仅返回与上一个定档版本区别
+     * 按分支返回PushResult列表
      * @param cargoPath 库路径
      * @return commit管道，最终按时间顺序排列
      */
-
-    /*
-    public ServerResponse<List<CommitInfo>> getCommitChannel(String cargoPath) throws Throwable {
+    public static ServerResponse<List<PushResult>> taskPushInfo(String cargoPath) throws Throwable {
         Git git = Git.open(new File(cargoPath));
         git.checkout().setName("master").call();
         RevWalk walk = new RevWalk(git.getRepository());
 
         List<Ref> refs = git.branchList().call();
-        ArrayList<CommitInfo> channel = new ArrayList<>();
+        ArrayList<PushResult> channel = new ArrayList<>();
 
         for(Ref ref : refs) {
             //跳过master分支
             if(Objects.equals("refs/heads/master", ref.getName())) {
                 continue;
             }
-            CommitInfo ci = new CommitInfo();
+            PushResult pr = new PushResult();
             //填补commit
-            ci.commit = walk.parseCommit(ref.getObjectId());
+            //ci.commit = walk.parseCommit(ref.getObjectId());
 
-            Ref lastRef = RootNode.getRoot().findBranchByName(ref.getName()).getRef(0);
+            //Ref lastRef = RootNode.getRoot().findBranchByName(ref.getName()).getRef(0);
             //填补differs
-            final List<DiffEntry> diffs = git.diff()
-                    .setOldTree(prepareTreeParser(git, lastRef.getObjectId()))
-                    .setNewTree(prepareTreeParser(git, ref.getObjectId()))
-                    .call();
-            ci.differs = new String[diffs.size()];
-            for(Integer i=0;i<diffs.size();++i) {
-                DiffEntry diff = diffs.get(i);
-                ci.differs[i] = diff.getChangeType() + ": "
-                        + (diff.getOldPath().equals(diff.getNewPath())
-                        ? diff.getNewPath() : diff.getOldPath() + " -> " + diff.getNewPath());
-            }
-            channel.add(ci);
+            //final List<DiffEntry> diffs = git.diff()
+            //        .setOldTree(prepareTreeParser(git, lastRef.getObjectId()))
+            //        .setNewTree(prepareTreeParser(git, ref.getObjectId()))
+            //        .call();
+            //ci.differs = new String[diffs.size()];
+            //for(Integer i=0;i<diffs.size();++i) {
+            //    DiffEntry diff = diffs.get(i);
+            //    ci.differs[i] = diff.getChangeType() + ": "
+            //            + (diff.getOldPath().equals(diff.getNewPath())
+            //            ? diff.getNewPath() : diff.getOldPath() + " -> " + diff.getNewPath());
+            //}
+            //channel.add(ci);
         }
 
-        channel.sort(Comparator.comparing(CommitInfo::order));
+        //channel.sort(Comparator.comparing(PushResult::order));
         walk.dispose();
         return ServerResponse.createBySuccess(channel);
     }
-    */
 
 
     /**

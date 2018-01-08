@@ -14,8 +14,7 @@ import java.io.File;
 
 public class Project extends AbstractDeck {
 
-    @Override
-    public ServerResponse<String> addCargo(Long id, String cargoPath) throws Throwable {
+    public static ServerResponse<String> addCargo(Long id, String cargoPath) throws Throwable {
         //建文件夹
         String name = Long.toString(id);
         String masterPath = cargoPath + name;
@@ -32,8 +31,7 @@ public class Project extends AbstractDeck {
         return ServerResponse.createBySuccess(gitLog.iterator().next().getName());
     }
 
-    @Override
-    public ServerResponse deleteCargo(Long id) throws Throwable {
+    public static ServerResponse deleteCargo(Long id) throws Throwable {
         return ServerResponse.createByErrorMessage("function developing.....");
     }
 

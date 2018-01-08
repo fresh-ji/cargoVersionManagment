@@ -18,54 +18,9 @@ import java.util.List;
 
 public class RequestProcess {
 
-    //目前不支持项目的fork
-    //public ServerResponse<ForkInfo> forkProject(String userIden, int projectId) throws Throwable {
-    //   Project pj = new Project();
-    //    TreeNode node = findNode(projectId);
-    //    return pj.forkCargo(userIden, node.repoPath);
-    //}
-
-    /**fork任务->接口*/
-    /*
-    public static ServerResponse<ForkInfo> forkTask(String userIdentify, Long taskId) throws Throwable {
-        Task ta = new Task();
-        TaskNode node = RootNode.getRoot().findTaskById(taskId);
-        if(node == null) {
-            return ServerResponse.createByErrorMessage(
-                    "Unable to fork, task id not found");
-        }
-        ServerResponse<ForkInfo> sr = ta.forkCargo(userIdentify, node.getRepoPath());
-        if(sr.isSuccess()) {
-            BranchNode bNode = new BranchNode(sr.getData().branchName, (long)1);
-            bNode.setUser(userIdentify);
-            bNode.parent = node;
-            node.branchList.push(bNode);
-            bNode.setRef(sr.getData().ref);
-            sr.getData().ref = null;
-        }
-        return sr;
-    }
-    */
-
-
-    //目前不支持项目的getCommitChannel
-    //public ServerResponse<List<CommitInfo>> getProjectCommitChannel(int projectId) throws Throwable {
-    //    Project pj = new Project();
-    //    TreeNode node = findNode(projectId);
-    //    return pj.getCommitChannel(node.repoPath, timeProgress);
-    //}
-
     /**获取任务各分支最新更改->接口*/
     /*
-    public static ServerResponse<List<CommitInfo>> getTaskCommitChannel(Long taskId) throws Throwable {
-        Task ta = new Task();
-        TaskNode node = RootNode.getRoot().findTaskById(taskId);
-        if(node == null) {
-            return ServerResponse.createByErrorMessage(
-                    "Unable to get commit channel, task id not found");
-        }
-        return ta.getCommitChannel(node.getRepoPath());
-    }
+
     */
 
     //目前不支持项目的lookChange

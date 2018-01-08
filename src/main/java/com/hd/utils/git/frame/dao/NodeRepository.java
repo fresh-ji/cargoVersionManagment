@@ -1,8 +1,8 @@
 package com.hd.utils.git.frame.dao;
 
 import com.hd.utils.git.pojo.GeneralNode;
-import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,4 +16,19 @@ import java.util.List;
 @Repository
 public interface NodeRepository extends JpaRepository<GeneralNode, Long> {
 
+    /**
+     * 根据nodeId查找node
+     * @param nodeId 节点id
+     * @return 节点们
+     */
+    @Query("select o from GeneralNode o where o.nodeId=?1")
+    List<GeneralNode> findAllByNodeId(Long nodeId);
+
+    /**
+     * 根据nodeName查找node
+     * @param nodeName 节点名
+     * @return 节点们
+     */
+    @Query("select o from GeneralNode o where o.name=?1")
+    List<GeneralNode> findAllByNodeName(String nodeName);
 }

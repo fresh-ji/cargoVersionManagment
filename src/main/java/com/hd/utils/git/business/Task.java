@@ -14,8 +14,7 @@ import java.io.File;
 
 public class Task extends AbstractDeck {
 
-    @Override
-    public ServerResponse<String> addCargo(Long id, String cargoPath) throws Throwable {
+    public static ServerResponse<String> addCargo(Long id, String cargoPath) throws Throwable {
         //建root文件夹
         String name = Long.toString(id);
         String rootPath = cargoPath + name;
@@ -31,7 +30,7 @@ public class Task extends AbstractDeck {
                 .setMessage("Hi, this is " + name + " on root side!")
                 .call();
         //建slave文件夹
-        String masterPath = taskPath + name;
+        String masterPath = TASK_PATH + name;
         File masterFile = new File(masterPath);
         if (masterFile.exists()) {
             return ServerResponse.createByErrorMessage(name
@@ -50,8 +49,7 @@ public class Task extends AbstractDeck {
         return ServerResponse.createBySuccess(gitLog.iterator().next().getName());
     }
 
-    @Override
-    public ServerResponse deleteCargo(Long id) throws Throwable {
+    public static ServerResponse deleteCargo(Long id) throws Throwable {
         return ServerResponse.createByErrorMessage("function developing.....");
     }
 

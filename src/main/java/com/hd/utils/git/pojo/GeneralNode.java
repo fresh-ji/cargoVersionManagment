@@ -24,15 +24,15 @@ public class GeneralNode {
     /**节点类型*/
     @Column(name = "type")
     private Integer type;
+    /**结点版本数*/
+    @Column(name = "version")
+    private Integer version;
     /**节点对应的库目录路径，为带名字的全路径*/
     @Column(name = "repo_path")
     private String repoPath;
     /**节点负责人*/
     @Column(name = "user")
     private String user;
-    /**父节点id，子节点id序列在各子类内*/
-    @Column(name = "parent_id")
-    private Long parentId;
 
     public Long getId() {
         return id;
@@ -66,6 +66,14 @@ public class GeneralNode {
         this.type = type;
     }
 
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
     public String getRepoPath() {
         return repoPath;
     }
@@ -80,14 +88,6 @@ public class GeneralNode {
 
     public void setUser(String user) {
         this.user = user;
-    }
-
-    public Long getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
     }
 
 }
