@@ -24,6 +24,9 @@ public class NodeSnapshot {
     /**本版本名*/
     @Column(name = "version_name")
     private String versionName;
+    /**对应的主版本号*/
+    @Column(name = "merge_edition")
+    private Integer mergeEdition;
 
     public Long getId() {
         return id;
@@ -55,5 +58,13 @@ public class NodeSnapshot {
 
     public void setVersionName(String versionName) {
         this.versionName = versionName;
+    }
+
+    public Integer getMergeEdition() {
+        return mergeEdition;
+    }
+
+    public void setMergeEdition(Integer mergeEdition) {
+        this.mergeEdition = mergeEdition;
     }
 }

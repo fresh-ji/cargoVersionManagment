@@ -4,14 +4,12 @@ import com.hd.utils.git.common.ServerResponse;
 import com.hd.utils.git.responsetype.ForkResult;
 import com.hd.utils.git.responsetype.PushResult;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.*;
 
 import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,6 +49,7 @@ abstract class AbstractDeck {
     }
 
     /**
+     * fork库
      * @param user 用户名
      * @param cargoPath 库路径，与add不同，这是全路径
      * @return clone路径及分支名
@@ -84,11 +83,29 @@ abstract class AbstractDeck {
     }
 
     /**
+     * branch新push来临
+     * @param branchName 分支名
+     * @param cargoPath 库路径
+     * @return 新版本名
+     */
+    public static ServerResponse<String> pushInform(String branchName, String cargoPath) throws Throwable {
+        Git git = Git.open(new File(cargoPath));
+        if(git.getRepository().findRef(branchName) == null) {
+            return ServerResponse.createByErrorMessage("branch not exist!!");
+        }
+        git.checkout().setName(branchName).call();
+        Iterable<RevCommit> gitLog = git.log().setMaxCount(1).call();
+        return ServerResponse.createBySuccess(gitLog.iterator().next().getName());
+    }
+
+    /**
      * 按分支返回PushResult列表
+     * @param branchList 需要处理的分支们
      * @param cargoPath 库路径
      * @return commit管道，最终按时间顺序排列
      */
-    public static ServerResponse<List<PushResult>> taskPushInfo(String cargoPath) throws Throwable {
+    public static ServerResponse<List<PushResult>> taskPushInfo(List<String> branchList,
+                                                                String cargoPath) throws Throwable {
         Git git = Git.open(new File(cargoPath));
         git.checkout().setName("master").call();
         RevWalk walk = new RevWalk(git.getRepository());
@@ -96,12 +113,12 @@ abstract class AbstractDeck {
         List<Ref> refs = git.branchList().call();
         ArrayList<PushResult> channel = new ArrayList<>();
 
-        for(Ref ref : refs) {
+        //for(Ref ref : refs) {
             //跳过master分支
-            if(Objects.equals("refs/heads/master", ref.getName())) {
-                continue;
-            }
-            PushResult pr = new PushResult();
+            //if(Objects.equals("refs/heads/master", ref.getName())) {
+            //    continue;
+            //}
+            //PushResult pr = new PushResult();
             //填补commit
             //ci.commit = walk.parseCommit(ref.getObjectId());
 
@@ -119,7 +136,7 @@ abstract class AbstractDeck {
             //            ? diff.getNewPath() : diff.getOldPath() + " -> " + diff.getNewPath());
             //}
             //channel.add(ci);
-        }
+        //}
 
         //channel.sort(Comparator.comparing(PushResult::order));
         walk.dispose();

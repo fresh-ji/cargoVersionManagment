@@ -27,6 +27,9 @@ public class Affiliation {
     /**从节点类型*/
     @Column(name = "child_type")
     private Integer childType;
+    /**从节点是否有新的push请求*/
+    @Column(name = "whether_push")
+    private Boolean whetherPush;
 
     public Long getId() {
         return id;
@@ -66,5 +69,13 @@ public class Affiliation {
 
     public void setChildType(Integer childType) {
         this.childType = childType;
+    }
+
+    public Boolean getWhetherPush() {
+        return whetherPush;
+    }
+
+    public void setWhetherPush(Boolean whetherPush) {
+        this.whetherPush = whetherPush;
     }
 }

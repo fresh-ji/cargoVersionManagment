@@ -5,7 +5,6 @@ import com.hd.utils.git.business.Task;
 import com.hd.utils.git.common.ServerResponse;
 import com.hd.utils.git.frame.dao.AffiliationRepository;
 import com.hd.utils.git.frame.dao.NodeRepository;
-import com.hd.utils.git.frame.dao.PushRepository;
 import com.hd.utils.git.frame.dao.SnapshotRepository;
 import com.hd.utils.git.pojo.*;
 import com.hd.utils.git.responsetype.ForkResult;
@@ -13,6 +12,7 @@ import com.hd.utils.git.responsetype.PushResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,17 +27,14 @@ public class Controller {
     private final NodeRepository nodeRepository;
     private final SnapshotRepository snapshotRepository;
     private final AffiliationRepository affiliationRepository;
-    private final PushRepository pushRepository;
 
     @Autowired
     public Controller(NodeRepository nodeRepository,
                       SnapshotRepository snapshotRepository,
-                      AffiliationRepository affiliationRepository,
-                      PushRepository pushRepository) {
+                      AffiliationRepository affiliationRepository) {
         this.nodeRepository = nodeRepository;
         this.snapshotRepository = snapshotRepository;
         this.affiliationRepository = affiliationRepository;
-        this.pushRepository = pushRepository;
     }
 
     /**
@@ -67,6 +64,7 @@ public class Controller {
             ns.setNodeId(projectId);
             ns.setEdition(1);
             ns.setVersionName(sr.getData());
+            ns.setMergeEdition(1);
             this.snapshotRepository.save(ns);
         }
         return ServerResponse.createBySuccess();
@@ -112,12 +110,14 @@ public class Controller {
             aff.setChildId(taskId);
             aff.setParentType(NodeType.PROJECT.getType());
             aff.setChildType(NodeType.TASK.getType());
+            aff.setWhetherPush(false);
             this.affiliationRepository.save(aff);
             //写版本信息
             NodeSnapshot ns = new NodeSnapshot();
             ns.setNodeId(taskId);
             ns.setEdition(1);
             ns.setVersionName(sr.getData());
+            ns.setMergeEdition(1);
             this.snapshotRepository.save(ns);
         }
         return ServerResponse.createBySuccess();
@@ -158,12 +158,14 @@ public class Controller {
             aff.setChildId(sr.getData().branchId);
             aff.setParentType(NodeType.TASK.getType());
             aff.setChildType(NodeType.BRANCH.getType());
+            aff.setWhetherPush(false);
             this.affiliationRepository.save(aff);
             //写版本信息
             NodeSnapshot ns = new NodeSnapshot();
-            ns.setNodeId(taskId);
+            ns.setNodeId(sr.getData().branchId);
             ns.setEdition(1);
             ns.setVersionName(sr.getData().versionName);
+            ns.setMergeEdition(tasks.get(0).getVersion());
             this.snapshotRepository.save(ns);
         }
         return sr;
@@ -175,7 +177,7 @@ public class Controller {
      * @return List<PushResult> 结果
      */
     @GetMapping("/pushInform/{branchId}")
-    public ServerResponse pushInform(@PathVariable Long branchId) {
+    public ServerResponse pushInform(@PathVariable Long branchId) throws Throwable {
         List<GeneralNode> branches = this.nodeRepository.findAllByNodeId(branchId);
         if(branches.size() == 0) {
             return ServerResponse.createByErrorMessage("branch not found!");
@@ -183,14 +185,30 @@ public class Controller {
         if(branches.size() != 1) {
             return ServerResponse.createByErrorMessage("branch not unique!");
         }
-        for(PushInform pi : this.pushRepository.findAll()) {
-            if(pi.getId().equals(branchId)) {
-                return ServerResponse.createBySuccess();
-            }
+
+        List<Affiliation> tasks = this.affiliationRepository.findAllByBranchId(branchId);
+        if(tasks.size() == 0) {
+            return ServerResponse.createByErrorMessage("task not found!");
         }
-        PushInform pi = new PushInform();
-        pi.setNodeId(branchId);
-        this.pushRepository.save(pi);
+        if(tasks.size() != 1) {
+            return ServerResponse.createByErrorMessage("task not unique!");
+        }
+
+        ServerResponse<String> sr = Task.pushInform(branches.get(0).getName(),
+                branches.get(0).getRepoPath());
+
+        //修改node信息
+        branches.get(0).setVersion(branches.get(0).getVersion() + 1);
+        //修改push位状态
+        Affiliation aff = tasks.get(0);
+        aff.setWhetherPush(true);
+        //修改snapshot
+        NodeSnapshot ns = new NodeSnapshot();
+        ns.setNodeId(branchId);
+        ns.setEdition(branches.get(0).getVersion());
+        ns.setVersionName(sr.getData());
+        ns.setMergeEdition(0);
+        this.snapshotRepository.save(ns);
         return ServerResponse.createBySuccess();
     }
 
@@ -213,6 +231,13 @@ public class Controller {
         if(!tasks.get(0).getUser().equals(userName)) {
             return ServerResponse.createByErrorMessage("user wrong!");
         }
-        return Task.taskPushInfo(tasks.get(0).getRepoPath());
+        List<String> branchList = new ArrayList<>();
+        for(Affiliation aff: this.affiliationRepository.findAllByTaskId(taskId)) {
+            if(aff.getWhetherPush()) {
+                List<GeneralNode> gn = this.nodeRepository.findAllByNodeId(aff.getChildId());
+                branchList.add(gn.get(0).getName());
+            }
+        }
+        return Task.taskPushInfo(branchList, tasks.get(0).getRepoPath());
     }
 }

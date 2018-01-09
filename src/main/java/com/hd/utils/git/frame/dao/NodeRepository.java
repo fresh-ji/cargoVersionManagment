@@ -31,4 +31,5 @@ public interface NodeRepository extends JpaRepository<GeneralNode, Long> {
      */
     @Query("select o from GeneralNode o where o.name=?1")
     List<GeneralNode> findAllByNodeName(String nodeName);
+
 }
