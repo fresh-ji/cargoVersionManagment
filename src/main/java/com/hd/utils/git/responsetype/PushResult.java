@@ -7,11 +7,7 @@ package com.hd.utils.git.responsetype;
  */
 
 public class PushResult {
-    /*
-    public RevCommit commit;
-    public String[] differs;
-    public Integer order() {
-        return commit.getCommitTime();
-    }
-    */
+    public String branchName;
+    public String[] differWithOrigin;
+    public String[] differWithCurrent;
 }

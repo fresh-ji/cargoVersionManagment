@@ -231,13 +231,22 @@ public class Controller {
         if(!tasks.get(0).getUser().equals(userName)) {
             return ServerResponse.createByErrorMessage("user wrong!");
         }
-        List<String> branchList = new ArrayList<>();
+
+        List<PushResult> prList = new ArrayList<>();
         for(Affiliation aff: this.affiliationRepository.findAllByTaskId(taskId)) {
             if(aff.getWhetherPush()) {
                 List<GeneralNode> gn = this.nodeRepository.findAllByNodeId(aff.getChildId());
-                branchList.add(gn.get(0).getName());
+                String pushVersion = this.snapshotRepository.
+                        findRecentByNodeId(gn.get(0).getNodeId()).getVersionName();
+                String currentVersion = this.snapshotRepository.
+                        findRecentByNodeId(taskId).getVersionName();
+                ServerResponse<PushResult> sr = Task.taskPushInfo(pushVersion,
+                        currentVersion, tasks.get(0).getRepoPath());
+                PushResult pr = sr.getData();
+                pr.branchName = gn.get(0).getName();
+                prList.add(pr);
             }
         }
-        return Task.taskPushInfo(branchList, tasks.get(0).getRepoPath());
+        return ServerResponse.createBySuccess(prList);
     }
 }

@@ -4,8 +4,14 @@ import com.hd.utils.git.common.ServerResponse;
 import com.hd.utils.git.responsetype.ForkResult;
 import com.hd.utils.git.responsetype.PushResult;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.*;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -100,49 +106,46 @@ abstract class AbstractDeck {
 
     /**
      * 按分支返回PushResult列表
-     * @param branchList 需要处理的分支们
+     //* @param originVersion 原始版本号
+     * @param pushVersion push版本号
+     * @param currentVersion 当前版本号
      * @param cargoPath 库路径
      * @return commit管道，最终按时间顺序排列
      */
-    public static ServerResponse<List<PushResult>> taskPushInfo(List<String> branchList,
-                                                                String cargoPath) throws Throwable {
+    public static ServerResponse<PushResult> taskPushInfo(//String originVersion,
+                                                          String pushVersion,
+                                                          String currentVersion,
+                                                          String cargoPath) throws Throwable {
         Git git = Git.open(new File(cargoPath));
         git.checkout().setName("master").call();
-        RevWalk walk = new RevWalk(git.getRepository());
 
-        List<Ref> refs = git.branchList().call();
-        ArrayList<PushResult> channel = new ArrayList<>();
+        PushResult pr = new PushResult();
 
-        //for(Ref ref : refs) {
-            //跳过master分支
-            //if(Objects.equals("refs/heads/master", ref.getName())) {
-            //    continue;
-            //}
-            //PushResult pr = new PushResult();
-            //填补commit
-            //ci.commit = walk.parseCommit(ref.getObjectId());
-
-            //Ref lastRef = RootNode.getRoot().findBranchByName(ref.getName()).getRef(0);
-            //填补differs
-            //final List<DiffEntry> diffs = git.diff()
-            //        .setOldTree(prepareTreeParser(git, lastRef.getObjectId()))
-            //        .setNewTree(prepareTreeParser(git, ref.getObjectId()))
-            //        .call();
-            //ci.differs = new String[diffs.size()];
-            //for(Integer i=0;i<diffs.size();++i) {
-            //    DiffEntry diff = diffs.get(i);
-            //    ci.differs[i] = diff.getChangeType() + ": "
-            //            + (diff.getOldPath().equals(diff.getNewPath())
-            //            ? diff.getNewPath() : diff.getOldPath() + " -> " + diff.getNewPath());
-            //}
-            //channel.add(ci);
+        //final List<DiffEntry> dwOrigin = git.diff()
+        //        .setOldTree(prepareTreeParser(git.getRepository(), originVersion))
+        //        .setNewTree(prepareTreeParser(git.getRepository(), pushVersion))
+        //        .call();
+        //pr.differWithOrigin = new String[dwOrigin.size()];
+        //for(Integer i=0;i<dwOrigin.size();++i) {
+        //    DiffEntry diff = dwOrigin.get(i);
+        //    pr.differWithOrigin[i] = diff.getChangeType() + " : "
+        //            + (diff.getOldPath().equals(diff.getNewPath())
+        //            ? diff.getNewPath() : diff.getOldPath() + " -> " + diff.getNewPath());
         //}
 
-        //channel.sort(Comparator.comparing(PushResult::order));
-        walk.dispose();
-        return ServerResponse.createBySuccess(channel);
+        final List<DiffEntry> dwCurrent = git.diff()
+                .setOldTree(prepareTreeParser(git.getRepository(), currentVersion))
+                .setNewTree(prepareTreeParser(git.getRepository(), pushVersion))
+                .call();
+        pr.differWithCurrent = new String[dwCurrent.size()];
+        for(Integer i=0;i<dwCurrent.size();++i) {
+            DiffEntry diff = dwCurrent.get(i);
+            pr.differWithCurrent[i] = diff.getChangeType() + " : "
+                    + (diff.getOldPath().equals(diff.getNewPath())
+                    ? diff.getNewPath() : diff.getOldPath() + " -> " + diff.getNewPath());
+        }
+        return ServerResponse.createBySuccess(pr);
     }
-
 
     /**
      * 查看以上channel中的单个文件具体更改情况
@@ -275,15 +278,15 @@ abstract class AbstractDeck {
 
     /**
      * 根据ref建立树
-     * @param git 库
-     * @param id 关键字
+     * @param repository 库
+     * @param version 版本号
      * @return 抽象树指针
      */
-    /*
-    private AbstractTreeIterator prepareTreeParser(Git git, ObjectId id) throws Throwable {
-        Repository repository = git.getRepository();
+    private static AbstractTreeIterator prepareTreeParser(Repository repository,
+                                                          String version) throws Throwable {
         RevWalk walk = new RevWalk(repository);
-        RevCommit commit = walk.parseCommit(id);
+        ObjectId objId = repository.resolve(version);
+        RevCommit commit = walk.parseCommit(objId);
         //把commit walk成树
         RevTree tree = walk.parseTree(commit.getTree().getId());
         CanonicalTreeParser treeParser = new CanonicalTreeParser();
@@ -292,5 +295,4 @@ abstract class AbstractDeck {
         walk.dispose();
         return treeParser;
     }
-    */
 }
